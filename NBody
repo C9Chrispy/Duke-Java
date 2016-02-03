@@ -1,0 +1,196 @@
+import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.io.FileNotFoundException;
+import java.util.Scanner;
+
+import javax.swing.JFileChooser;
+
+import princeton.StdAudio;
+import princeton.StdDraw;
+
+public class NBody{
+	
+    public static final double G = 6.67E-11;
+
+    /**
+     * returns Euclidean distance between (x1, y1) and (x2, y2)
+     *
+     * @param x1
+     *            x-coordinate of point 1
+     * @param y1
+     *            y-coordinate of point 1
+     * @param x2
+     *            x-coordinate of point 2
+     * @param y2
+     *            y-coordinate of point 2
+     * @return Euclidean distance between (x1, y1) and (x2, y2)
+     */
+    public double distance(double x1, double y1, double x2, double y2) {
+    	//TODO: Complete distance
+    	
+        return Math.sqrt(((x2-x1)*(x2-x1)) + ((y2-y1)*(y2-y1)));
+    }
+    
+    
+    /**
+     * return the magnitude of the gravitational force between two bodies of
+     * mass m1 and m2 that are distance r apart
+     *
+     * @param m1
+     *            mass of body 1 in kg
+     * @param m2
+     *            mass of body 2 in kg
+     * @param r
+     *            distance in m
+     * @return force between m1 and m2 that are distance r apart
+     */
+    public double force(double m1, double m2, double r) {
+        //TODO: Complete force
+    	//if (r != 0) {
+    	return (G*m1*m2)/(r*r); 
+    	//}
+    	//else {
+    	//	return 0;
+    	//}
+    }
+
+
+    /**
+     * Returns the x positions and y positions of bodies
+     * @param totalTime The total amount of universe time to run for
+     * @param timeStep The value of delta t in the equations to calculate position
+     * @param info The scanner with info about the initial conditions of the
+     * bodies
+     * @return an array whose first element is the x and y position of the first body, and so on
+     * t = totalTime
+     */
+    public double[][] positions(Scanner info, int totalTime, int timeStep) {
+        //TODO: Complete positions
+    	int bodies = info.nextInt();
+    	double radius = info.nextDouble();
+    	double[] px = new double[bodies];
+    	double[] py = new double[bodies];
+    	double[] vx = new double[bodies];
+    	double[] vy = new double[bodies];
+    	double[] mass = new double[bodies];
+    	String[] image = new String[bodies];
+         //Replace 0 with the number of
+        										   //bodies, read from the file
+        double[] fx = new double[bodies];
+        double[] fy = new double[bodies];
+        double[] ax = new double[bodies];
+        double[] ay = new double[bodies]; 
+        double[][] output = new double[bodies][2];
+        
+	    for (int i = 0; i < bodies; i++) {
+	      	px[i] = info.nextDouble();
+	       	py[i] = info.nextDouble();
+	       	vx[i] = info.nextDouble();
+	       	vy[i] = info.nextDouble();
+	       	mass[i] = info.nextDouble();
+	       	image[i] = info.next();
+		}
+	    
+	    for (int time = 0; time < totalTime; time += timeStep) {
+	    	for (int i = 0; i < bodies; i++) {
+	    		for (int j = 0; j < bodies; j++) {
+	    			double pdist = distance(px[i], py[i], px[j], py[j]);
+	    			double pforce = force(mass[i], mass[j], pdist);
+	    			if (pdist != 0) {
+	    				fx[i] = fx[i] + ((pforce * ((px[j] - px[i])/pdist)));
+	    				fy[i] = fy[i] + ((pforce * ((py[j] - py[i])/pdist)));
+	    			}
+	    			else {
+	    				fx[i] = fx[i] + 0;
+	    				fy[i] = fy[i] + 0;
+	    			}
+	    		}
+	    		ax[i] = (fx[i])/(mass[i]);
+	    		ay[i] = (fy[i])/(mass[i]);
+	    		vx[i] = vx[i] + (ax[i] * timeStep);
+	    		vy[i] = vy[i] + (ay[i] * timeStep);
+	    	}
+	        
+	    	for (int i = 0; i < bodies; i++) {
+	    		px[i] = px[i] + (vx[i]*timeStep);
+	    		py[i] = py[i] + (vy[i]*timeStep);
+	    		fx[i] = 0;
+	    		fy[i] = 0;
+	    	}
+	        
+	        for(int i = 0; i < bodies; i++) {
+	        	for (int j = 0; j < 2; j++) {
+	        		if (j == 0) {
+	        			output[i][j] = px[i];
+	        		}
+	        		else {
+	        			output[i][j] = py[i];
+	        		}
+	        	}
+	        }
+	        StdDraw.setXscale(-radius, radius);
+	        StdDraw.setYscale(-radius, radius);
+	        StdDraw.picture(0, 0, "data/starfield.jpg");
+	        
+	        for (int i = 0; i < bodies; i++) {
+	        	StdDraw.picture(px[i], py[i], "data/" + image[i]);
+	        }
+		    StdDraw.show(30);
+        }
+    return output;
+    }
+    
+
+    public static void main(String[] args) {
+        Scanner info = openFile();
+        int time = 1000000;
+        int dt = 25000;
+        
+        if (info != null) {
+            //StdAudio.play("data/2001.mid");
+            NBody myNBody = new NBody();
+            double[][] results = myNBody.positions(info, time, dt);
+            for(int i = 0; i < results.length; i++) {
+                for(int j = 0; j < results[i].length; j++) {
+                    System.out.print(results[i][j]+" ");
+                }
+                System.out.println();
+            }
+            StdAudio.close();
+        }
+    }
+    /**
+     * Displays file chooser for browsing in the project directory. and opens
+     * the selected file
+     *
+     * @return a new Scanner that produces values scanned from the selected
+     *         file. null if file could not be opened or was not selected
+     */
+    
+    public static Scanner openFile() {
+        Scanner scan = null;
+        System.out.println("Opening file dialog.");
+        JFileChooser openChooser = new JFileChooser(System.getProperties()
+                                                    .getProperty("user.dir"));
+        
+        int retval = openChooser.showOpenDialog(null);
+        if (retval == JFileChooser.APPROVE_OPTION) {
+            File file = openChooser.getSelectedFile();
+            System.out.println(file.getAbsolutePath());
+            try {
+                scan = new Scanner(file);
+                System.out.println("Opening: " + file.getName() + ".");
+            } catch (FileNotFoundException e) {
+                System.out.println("Could not open selected file.");
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("File open canceled.");
+            System.exit(0);
+        }
+        
+        return scan;
+    }
+}
